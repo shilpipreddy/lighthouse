@@ -28,7 +28,6 @@ const ByteEfficiencyAudit = require('./byte-efficiency-audit');
 const URL = require('../../lib/url-shim');
 
 const IGNORE_THRESHOLD_IN_BYTES = 2048;
-const WASTEFUL_THRESHOLD_IN_BYTES = 25 * 1024;
 
 class UsesResponsiveImages extends ByteEfficiencyAudit {
   /**
@@ -74,7 +73,6 @@ class UsesResponsiveImages extends ByteEfficiencyAudit {
       totalBytes,
       wastedBytes,
       wastedPercent: 100 * wastedRatio,
-      isWasteful: wastedBytes > WASTEFUL_THRESHOLD_IN_BYTES,
     };
   }
 
@@ -113,7 +111,6 @@ class UsesResponsiveImages extends ByteEfficiencyAudit {
         .filter(item => item.wastedBytes > IGNORE_THRESHOLD_IN_BYTES);
     return {
       debugString,
-      passes: !results.find(item => item.isWasteful),
       results,
       tableHeadings: {
         preview: '',

@@ -25,7 +25,6 @@ const URL = require('../../lib/url-shim');
 
 const IGNORE_THRESHOLD_IN_BYTES = 1400;
 const IGNORE_THRESHOLD_IN_PERCENT = 0.1;
-const TOTAL_WASTED_BYTES_THRESHOLD = 10 * 1024; // 10KB
 
 class ResponsesAreCompressed extends ByteEfficiencyAudit {
   /**
@@ -52,7 +51,6 @@ class ResponsesAreCompressed extends ByteEfficiencyAudit {
   static audit_(artifacts) {
     const uncompressedResponses = artifacts.ResponseCompression;
 
-    let totalWastedBytes = 0;
     const results = [];
     uncompressedResponses.forEach(record => {
       const originalSize = record.resourceSize;
@@ -76,7 +74,6 @@ class ResponsesAreCompressed extends ByteEfficiencyAudit {
         return;
       }
 
-      totalWastedBytes += gzipSavings;
       const totalBytes = originalSize;
       const gzipSavingsBytes = gzipSavings;
       const gzipSavingsPercent = 100 * gzipSavingsBytes / totalBytes;
@@ -89,10 +86,7 @@ class ResponsesAreCompressed extends ByteEfficiencyAudit {
       });
     });
 
-    let debugString;
     return {
-      passes: totalWastedBytes < TOTAL_WASTED_BYTES_THRESHOLD,
-      debugString,
       results,
       tableHeadings: {
         url: 'Uncompressed resource URL',

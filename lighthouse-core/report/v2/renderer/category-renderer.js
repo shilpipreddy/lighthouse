@@ -116,6 +116,94 @@ class CategoryRenderer {
   }
 
   /**
+   * @param {!ReportRenderer.AuditJSON} audit
+   * @return {!Element}
+   */
+  _renderPerfHintAudit(audit, scale) {
+    const wastedMs = audit.result.extendedInfo.value.wastedMs;
+    const wastedKb = audit.result.extendedInfo.value.wastedKb;
+    if (!wastedMs) return this._dom.createElement('span');
+
+    const element = this._dom.createElement('details', [
+      'lh-perf-hint',
+      `lh-perf-hint--${Util.calculateRating(audit.score)}`,
+      'lh-expandable-details',
+    ].join(' '));
+    const summary = this._dom.createElement('summary', 'lh-perf-hint__summary ' +
+        'lh-expandable-details__summary');
+    element.appendChild(summary);
+
+    const titleEl = this._dom.createElement('div', 'lh-perf-hint__title');
+    titleEl.textContent = audit.result.description;
+    summary.appendChild(titleEl);
+
+    const sparklineContainerEl = this._dom.createElement('div', 'lh-perf-hint__sparkline');
+    const sparklineEl = this._dom.createElement('div', 'lh-sparkline');
+    const sparklineBarEl = this._dom.createElement('div', 'lh-sparkline__bar');
+    sparklineBarEl.style.width = wastedMs / scale * 100 + '%';
+    sparklineEl.appendChild(sparklineBarEl);
+    sparklineContainerEl.appendChild(sparklineEl);
+    summary.appendChild(sparklineContainerEl);
+
+    const statsEl = this._dom.createElement('div', 'lh-perf-hint__stats');
+    const statsMsEl = this._dom.createElement('div', 'lh-perf-hint__primary-stat');
+    statsMsEl.textContent = wastedMs.toLocaleString() + ' ms';
+    statsEl.appendChild(statsMsEl);
+    summary.appendChild(statsEl);
+
+    const arrowEl = this._dom.createElement('div', 'lh-toggle-arrow', {title: 'See resources'});
+    summary.appendChild(arrowEl);
+
+    if (wastedKb) {
+      const statsKbEl = this._dom.createElement('div', 'lh-perf-hint__secondary-stat');
+      statsKbEl.textContent = wastedKb.toLocaleString() + ' KB';
+      statsEl.appendChild(statsKbEl);
+    }
+
+    const descriptionEl = this._dom.createElement('div', 'lh-perf-hint__description');
+    descriptionEl.textContent = audit.result.helpText;
+    element.appendChild(descriptionEl);
+
+    if (audit.result.details) {
+      element.appendChild(this._detailsRenderer.render(audit.result.details));
+    }
+    return element;
+  }
+
+  /**
+   * @param {!Array<!ReportRenderer.AuditJSON>} audits
+   * @param {!ReportRenderer.GroupJSON} group
+   * @return {!Element}
+   */
+  _renderAuditGroup(audits, group, renderAudit) {
+    if (!renderAudit) {
+      renderAudit = audit => this._renderAudit(audit);
+    }
+
+    const auditGroupElem = this._dom.createElement('details',
+          'lh-audit-group lh-expandable-details');
+    const auditGroupHeader = this._dom.createElement('div',
+          'lh-audit-group__header lh-expandable-details__header');
+    auditGroupHeader.textContent = group.title;
+
+    const auditGroupDescription = this._dom.createElement('div', 'lh-audit-group__description');
+    auditGroupDescription.textContent = group.description;
+
+    const auditGroupSummary = this._dom.createElement('summary',
+          'lh-audit-group__summary lh-expandable-details__summary');
+    const auditGroupArrow = this._dom.createElement('div', 'lh-toggle-arrow', {
+      title: 'See audits',
+    });
+    auditGroupSummary.appendChild(auditGroupHeader);
+    auditGroupSummary.appendChild(auditGroupArrow);
+
+    auditGroupElem.appendChild(auditGroupSummary);
+    auditGroupElem.appendChild(auditGroupDescription);
+    audits.forEach(audit => auditGroupElem.appendChild(renderAudit(audit)));
+    return auditGroupElem;
+  }
+
+  /**
    * @param {!Document|!Element} context
    */
   setTemplateContext(context) {
@@ -158,6 +246,8 @@ class CategoryRenderer {
    */
   render(category, groups) {
     switch (category.id) {
+      case 'performance':
+        return this._renderPerformanceCategory(category, groups);
       case 'accessibility':
         return this._renderAccessibilityCategory(category, groups);
       default:
@@ -199,32 +289,36 @@ class CategoryRenderer {
   }
 
   /**
-   * @param {!Array<!ReportRenderer.AuditJSON>} audits
-   * @param {!ReportRenderer.GroupJSON} group
+   * @param {!ReportRenderer.CategoryJSON} category
+   * @param {!Object<string, !ReportRenderer.GroupJSON>} groups
    * @return {!Element}
    */
-  _renderAuditGroup(audits, group) {
-    const auditGroupElem = this._dom.createElement('details',
-          'lh-audit-group lh-expandable-details');
-    const auditGroupHeader = this._dom.createElement('div',
-          'lh-audit-group__header lh-expandable-details__header');
-    auditGroupHeader.textContent = group.title;
+  _renderPerformanceCategory(category, groups) {
+    const element = this._dom.createElement('div', 'lh-category');
+    element.id = category.id;
+    element.appendChild(this._renderCategoryScore(category));
 
-    const auditGroupDescription = this._dom.createElement('div', 'lh-audit-group__description');
-    auditGroupDescription.textContent = group.description;
+    const metricAudits = category.audits.filter(audit => audit.group === 'perf-metric');
+    const metricAuditsEl = this._renderAuditGroup(metricAudits, groups['perf-metric']);
+    metricAuditsEl.open = true;
+    element.appendChild(metricAuditsEl);
 
-    const auditGroupSummary = this._dom.createElement('summary',
-          'lh-audit-group__summary lh-expandable-details__summary');
-    const auditGroupArrow = this._dom.createElement('div', 'lh-toggle-arrow', {
-      title: 'See audits',
-    });
-    auditGroupSummary.appendChild(auditGroupHeader);
-    auditGroupSummary.appendChild(auditGroupArrow);
+    const hintAudits = category.audits
+        .filter(audit => audit.group === 'perf-hint')
+        .sort((auditA, auditB) => auditB.result.rawValue - auditA.result.rawValue);
+    const maxWaste = hintAudits.reduce((max, audit) => Math.max(max, audit.result.rawValue), 0);
+    const scale = Math.ceil(maxWaste / 1000) * 1000;
+    const hintAuditsEl = this._renderAuditGroup(hintAudits, groups['perf-hint'],
+        audit => this._renderPerfHintAudit(audit, scale));
+    hintAuditsEl.open = hintAudits.some(audit => audit.score < 100);
+    element.appendChild(hintAuditsEl);
 
-    auditGroupElem.appendChild(auditGroupSummary);
-    auditGroupElem.appendChild(auditGroupDescription);
-    audits.forEach(audit => auditGroupElem.appendChild(this._renderAudit(audit)));
-    return auditGroupElem;
+    const infoAudits = category.audits.filter(audit => audit.group === 'perf-info');
+    const infoAuditsEl = this._renderAuditGroup(infoAudits, groups['perf-info']);
+    infoAuditsEl.open = hintAudits.some(audit => audit.score < 100);
+    element.appendChild(infoAuditsEl);
+
+    return element;
   }
 
   /**

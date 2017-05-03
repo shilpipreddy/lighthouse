@@ -24,6 +24,7 @@
 const Audit = require('../audit');
 const URL = require('../../lib/url-shim');
 const Formatter = require('../../report/formatter');
+const scoreForWastedMs = require('../byte-efficiency/byte-efficiency-audit').scoreForWastedMs;
 
 // Because of the way we detect blocking stylesheets, asynchronously loaded
 // CSS with link[rel=preload] and an onload handler (see https://github.com/filamentgroup/loadCSS)
@@ -87,10 +88,12 @@ class LinkBlockingFirstPaintAudit extends Audit {
 
     return {
       displayValue,
-      rawValue: results.length === 0,
+      score: scoreForWastedMs(delayTime),
+      rawValue: delayTime,
       extendedInfo: {
         formatter: Formatter.SUPPORTED_FORMATS.TABLE,
         value: {
+          wastedMs: delayTime,
           results,
           tableHeadings: {
             url: 'URL',

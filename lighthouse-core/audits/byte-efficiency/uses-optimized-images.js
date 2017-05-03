@@ -28,9 +28,6 @@ const ByteEfficiencyAudit = require('./byte-efficiency-audit');
 const URL = require('../../lib/url-shim');
 
 const IGNORE_THRESHOLD_IN_BYTES = 2048;
-const TOTAL_WASTED_BYTES_THRESHOLD = 1000 * 1024;
-const JPEG_ALREADY_OPTIMIZED_THRESHOLD_IN_BYTES = 25 * 1024;
-const WEBP_ALREADY_OPTIMIZED_THRESHOLD_IN_BYTES = 100 * 1024;
 
 class UsesOptimizedImages extends ByteEfficiencyAudit {
   /**
@@ -69,39 +66,26 @@ class UsesOptimizedImages extends ByteEfficiencyAudit {
   static audit_(artifacts) {
     const images = artifacts.OptimizedImages;
 
+    const results = [];
     const failedImages = [];
-    let totalWastedBytes = 0;
-    let hasAllEfficientImages = true;
-
-    const results = images.reduce((results, image) => {
+    images.forEach(image => {
       if (image.failed) {
         failedImages.push(image);
-        return results;
+        return;
       } else if (image.originalSize < Math.max(IGNORE_THRESHOLD_IN_BYTES, image.webpSize)) {
-        return results;
+        return;
       }
 
       const url = URL.getDisplayName(image.url);
       const webpSavings = UsesOptimizedImages.computeSavings(image, 'webp');
 
-      if (webpSavings.bytes > WEBP_ALREADY_OPTIMIZED_THRESHOLD_IN_BYTES) {
-        hasAllEfficientImages = false;
-      } else if (webpSavings.bytes < IGNORE_THRESHOLD_IN_BYTES) {
-        return results;
-      }
-
       let jpegSavingsLabel;
       if (/(jpeg|bmp)/.test(image.mimeType)) {
         const jpegSavings = UsesOptimizedImages.computeSavings(image, 'jpeg');
-        if (jpegSavings.bytes > JPEG_ALREADY_OPTIMIZED_THRESHOLD_IN_BYTES) {
-          hasAllEfficientImages = false;
-        }
         if (jpegSavings.bytes > IGNORE_THRESHOLD_IN_BYTES) {
           jpegSavingsLabel = this.toSavingsString(jpegSavings.bytes, jpegSavings.percent);
         }
       }
-
-      totalWastedBytes += webpSavings.bytes;
 
       results.push({
         url,
@@ -112,8 +96,7 @@ class UsesOptimizedImages extends ByteEfficiencyAudit {
         webpSavings: this.toSavingsString(webpSavings.bytes, webpSavings.percent),
         jpegSavings: jpegSavingsLabel
       });
-      return results;
-    }, []);
+    });
 
     let debugString;
     if (failedImages.length) {
@@ -122,7 +105,6 @@ class UsesOptimizedImages extends ByteEfficiencyAudit {
     }
 
     return {
-      passes: hasAllEfficientImages && totalWastedBytes < TOTAL_WASTED_BYTES_THRESHOLD,
       debugString,
       results,
       tableHeadings: {
