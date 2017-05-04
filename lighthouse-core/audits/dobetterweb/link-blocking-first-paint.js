@@ -87,6 +87,15 @@ class LinkBlockingFirstPaintAudit extends Audit {
       displayValue = `${results.length} resource delayed first paint by ${delayTime}ms`;
     }
 
+    const headings = [
+      {key: 'url', itemType: 'url', text: 'URL'},
+      {key: 'totalKb', itemType: 'text', text: 'Size (KB)'},
+      {key: 'totalMs', itemType: 'text', text: 'Delayed Paint By (ms)'},
+    ];
+
+    const v1TableHeadings = Audit.makeV1TableHeadings(headings);
+    const v2TableDetails = Audit.makeV2TableDetails(headings, results);
+
     return {
       displayValue,
       score: scoreForWastedMs(delayTime),
@@ -96,13 +105,10 @@ class LinkBlockingFirstPaintAudit extends Audit {
         value: {
           wastedMs: delayTime,
           results,
-          tableHeadings: {
-            url: 'URL',
-            totalKb: 'Size (KB)',
-            totalMs: 'Delayed Paint By (ms)'
-          }
+          tableHeadings: v1TableHeadings
         }
-      }
+      },
+      details: v2TableDetails
     };
   }
 

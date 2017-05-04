@@ -23,7 +23,7 @@ const assert = require('assert');
 describe('Byte efficiency base audit', () => {
   it('should format as extendedInfo', () => {
     const result = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [],
     });
 
@@ -33,7 +33,7 @@ describe('Byte efficiency base audit', () => {
 
   it('should set the rawValue', () => {
     const result = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 2345, totalBytes: 3000, wastedPercent: 65}],
     }, 5000);
 
@@ -42,22 +42,22 @@ describe('Byte efficiency base audit', () => {
 
   it('should score the wastedMs', () => {
     const perfectResult = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 400, totalBytes: 4000, wastedPercent: 10}],
     }, 100000);
 
     const goodResult = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 2345, totalBytes: 3000, wastedPercent: 65}],
     }, 10000);
 
     const averageResult = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 2345, totalBytes: 3000, wastedPercent: 65}],
     }, 5000);
 
     const failingResult = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 45000, totalBytes: 45000, wastedPercent: 100}],
     }, 10000);
 
@@ -69,7 +69,7 @@ describe('Byte efficiency base audit', () => {
 
   it('should populate Kb', () => {
     const result = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 2048, totalBytes: 4096, wastedPercent: 50}],
     });
 
@@ -79,7 +79,7 @@ describe('Byte efficiency base audit', () => {
 
   it('should populate Ms', () => {
     const result = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [{wastedBytes: 350, totalBytes: 700, wastedPercent: 50}],
     }, 1000);
 
@@ -89,7 +89,7 @@ describe('Byte efficiency base audit', () => {
 
   it('should sort on wastedBytes', () => {
     const result = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [
         {wastedBytes: 350, totalBytes: 700, wastedPercent: 50},
         {wastedBytes: 450, totalBytes: 1000, wastedPercent: 50},
@@ -104,7 +104,7 @@ describe('Byte efficiency base audit', () => {
 
   it('should create a display value', () => {
     const result = ByteEfficiencyAudit.createAuditResult({
-      tableHeadings: {value: 'Label'},
+      headings: [{key: 'value', text: 'Label'}],
       results: [
         {wastedBytes: 512, totalBytes: 700, wastedPercent: 50},
         {wastedBytes: 512, totalBytes: 1000, wastedPercent: 50},
