@@ -117,12 +117,13 @@ class CategoryRenderer {
 
   /**
    * @param {!ReportRenderer.AuditJSON} audit
+   * @param {number} scale
    * @return {!Element}
    */
   _renderPerfHintAudit(audit, scale) {
-    const wastedMs = audit.result.extendedInfo.value.wastedMs;
-    const wastedKb = audit.result.extendedInfo.value.wastedKb;
-    if (!wastedMs) return this._dom.createElement('span');
+    const extendedInfo = /** @type {!CategoryRenderer.PerfHintExtendedInfo}
+        */ (audit.result.extendedInfo);
+    if (!extendedInfo.value.wastedMs) return this._dom.createElement('span');
 
     const element = this._dom.createElement('details', [
       'lh-perf-hint',
@@ -140,23 +141,23 @@ class CategoryRenderer {
     const sparklineContainerEl = this._dom.createElement('div', 'lh-perf-hint__sparkline');
     const sparklineEl = this._dom.createElement('div', 'lh-sparkline');
     const sparklineBarEl = this._dom.createElement('div', 'lh-sparkline__bar');
-    sparklineBarEl.style.width = wastedMs / scale * 100 + '%';
+    sparklineBarEl.style.width = extendedInfo.value.wastedMs / scale * 100 + '%';
     sparklineEl.appendChild(sparklineBarEl);
     sparklineContainerEl.appendChild(sparklineEl);
     summary.appendChild(sparklineContainerEl);
 
     const statsEl = this._dom.createElement('div', 'lh-perf-hint__stats');
     const statsMsEl = this._dom.createElement('div', 'lh-perf-hint__primary-stat');
-    statsMsEl.textContent = wastedMs.toLocaleString() + ' ms';
+    statsMsEl.textContent = extendedInfo.value.wastedMs.toLocaleString() + ' ms';
     statsEl.appendChild(statsMsEl);
     summary.appendChild(statsEl);
 
     const arrowEl = this._dom.createElement('div', 'lh-toggle-arrow', {title: 'See resources'});
     summary.appendChild(arrowEl);
 
-    if (wastedKb) {
+    if (extendedInfo.value.wastedKb) {
       const statsKbEl = this._dom.createElement('div', 'lh-perf-hint__secondary-stat');
-      statsKbEl.textContent = wastedKb.toLocaleString() + ' KB';
+      statsKbEl.textContent = extendedInfo.value.wastedKb.toLocaleString() + ' KB';
       statsEl.appendChild(statsKbEl);
     }
 
@@ -173,11 +174,12 @@ class CategoryRenderer {
   /**
    * @param {!Array<!ReportRenderer.AuditJSON>} audits
    * @param {!ReportRenderer.GroupJSON} group
+   * @param {function(!ReportRenderer.AuditJSON): !Element=} renderAudit
    * @return {!Element}
    */
   _renderAuditGroup(audits, group, renderAudit) {
     if (!renderAudit) {
-      renderAudit = audit => this._renderAudit(audit);
+      renderAudit = this._renderAudit.bind(this);
     }
 
     const auditGroupElem = this._dom.createElement('details',
@@ -306,7 +308,9 @@ class CategoryRenderer {
     const hintAudits = category.audits
         .filter(audit => audit.group === 'perf-hint')
         .sort((auditA, auditB) => auditB.result.rawValue - auditA.result.rawValue);
-    const maxWaste = hintAudits.reduce((max, audit) => Math.max(max, audit.result.rawValue), 0);
+    let maxWaste = 0;
+    hintAudits.forEach(audit => maxWaste = Math.max(maxWaste, audit.result.rawValue));
+
     const scale = Math.ceil(maxWaste / 1000) * 1000;
     const hintAuditsEl = this._renderAuditGroup(hintAudits, groups['perf-hint'],
         audit => this._renderPerfHintAudit(audit, scale));
@@ -381,3 +385,14 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   self.CategoryRenderer = CategoryRenderer;
 }
+
+
+/**
+ * @typedef {{
+ *     value: {
+ *       wastedMs: (number|undefined),
+ *       wastedKb: (number|undefined),
+ *     }
+ * }}
+ */
+CategoryRenderer.PerfHintExtendedInfo; // eslint-disable-line no-unused-expressions

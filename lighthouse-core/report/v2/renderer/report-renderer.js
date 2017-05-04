@@ -171,6 +171,7 @@ if (typeof module !== 'undefined' && module.exports) {
  *     score: number,
  *     group: string,
  *     result: {
+ *       rawValue: (number|boolean|undefined),
  *       description: string,
  *       informative: boolean,
  *       debugString: string,
@@ -179,6 +180,7 @@ if (typeof module !== 'undefined' && module.exports) {
  *       score: (number|boolean),
  *       scoringMode: string,
  *       optimalValue: number,
+ *       extendedInfo: Object,
  *       details: (!DetailsRenderer.DetailsJSON|undefined)
  *     }
  * }}
