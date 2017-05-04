@@ -21,7 +21,7 @@ const Formatter = require('../../report/formatter');
 
 const KB_IN_BYTES = 1024;
 
-const WASTED_MS_FOR_AVERAGE = 150;
+const WASTED_MS_FOR_AVERAGE = 300;
 const WASTED_MS_FOR_POOR = 750;
 
 /**

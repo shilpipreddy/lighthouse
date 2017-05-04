@@ -433,6 +433,7 @@ summary {
 
 .lh-report {
   margin-left: var(--report-menu-width);
+  width: var(--report-width);
   background-color: #fff;
 }
 
