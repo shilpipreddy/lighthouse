@@ -315,20 +315,24 @@ class CategoryRenderer {
     const hintAudits = category.audits
         .filter(audit => audit.group === 'perf-hint' && audit.score < 100)
         .sort((auditA, auditB) => auditB.result.rawValue - auditA.result.rawValue);
-    let maxWaste = 0;
-    hintAudits.forEach(audit => maxWaste = Math.max(maxWaste, audit.result.rawValue));
+    if (hintAudits.length) {
+      let maxWaste = 0;
+      hintAudits.forEach(audit => maxWaste = Math.max(maxWaste, audit.result.rawValue));
 
-    const scale = Math.ceil(maxWaste / 1000) * 1000;
-    const hintAuditsEl = this._renderAuditGroup(hintAudits, groups['perf-hint'],
-        audit => this._renderPerfHintAudit(audit, scale));
-    hintAuditsEl.open = hintAudits.some(audit => audit.score < 100);
-    element.appendChild(hintAuditsEl);
+      const scale = Math.ceil(maxWaste / 1000) * 1000;
+      const hintAuditsEl = this._renderAuditGroup(hintAudits, groups['perf-hint'],
+          audit => this._renderPerfHintAudit(audit, scale));
+      hintAuditsEl.open = true;
+      element.appendChild(hintAuditsEl);
+    }
 
     const infoAudits = category.audits
         .filter(audit => audit.group === 'perf-info' && audit.score < 100);
-    const infoAuditsEl = this._renderAuditGroup(infoAudits, groups['perf-info']);
-    infoAuditsEl.open = hintAudits.some(audit => audit.score < 100);
-    element.appendChild(infoAuditsEl);
+    if (infoAudits.length) {
+      const infoAuditsEl = this._renderAuditGroup(infoAudits, groups['perf-info']);
+      infoAuditsEl.open = true;
+      element.appendChild(infoAuditsEl);
+    }
 
     const passedElements = category.audits
         .filter(audit => audit.group !== 'perf-metric' && audit.score === 100)
