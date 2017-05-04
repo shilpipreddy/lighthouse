@@ -65,7 +65,8 @@ class LinkBlockingFirstPaintAudit extends Audit {
         (item.endTime - item.startTime) * 1000 >= loadThreshold;
     });
 
-    const startTime = filtered.reduce((t, item) => Math.min(t, item.startTime), Number.MAX_VALUE);
+    const startTime = filtered.length === 0 ? 0 :
+        filtered.reduce((t, item) => Math.min(t, item.startTime), Number.MAX_VALUE);
     let endTime = 0;
 
     const results = filtered.map(item => {

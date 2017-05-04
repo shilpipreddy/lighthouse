@@ -55,7 +55,7 @@ module.exports = [
         score: false
       },
       'link-blocking-first-paint': {
-        score: false,
+        score: 0,
         extendedInfo: {
           value: {
             results: {
@@ -120,7 +120,7 @@ module.exports = [
         score: false
       },
       'script-blocking-first-paint': {
-        score: false,
+        score: 90,
         extendedInfo: {
           value: {
             results: {
