@@ -41,7 +41,7 @@ class LinkBlockingFirstPaintAudit extends Audit {
     return {
       category: 'Performance',
       name: 'link-blocking-first-paint',
-      description: 'Render-blocking stylesheets',
+      description: 'Reduce render-blocking stylesheets',
       informative: true,
       helpText: 'Link elements are blocking the first paint of your page. Consider ' +
           'inlining critical links and deferring non-critical ones. ' +

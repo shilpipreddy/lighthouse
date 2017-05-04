@@ -206,6 +206,19 @@ class CategoryRenderer {
   }
 
   /**
+   * @param {!Array<!Element>} elements
+   * @return {!Element}
+   */
+  _renderPassedAuditsSection(elements) {
+    const passedElem = this._dom.createElement('details', 'lh-passed-audits');
+    const passedSummary = this._dom.createElement('summary', 'lh-passed-audits-summary');
+    passedElem.appendChild(passedSummary);
+    passedSummary.textContent = `View ${elements.length} passed items`;
+    elements.forEach(elem => passedElem.appendChild(elem));
+    return passedElem;
+  }
+
+  /**
    * @param {!Document|!Element} context
    */
   setTemplateContext(context) {
@@ -278,14 +291,8 @@ class CategoryRenderer {
       return element;
     }
 
-    const passedElem = this._dom.createElement('details', 'lh-passed-audits');
-    const passedSummary = this._dom.createElement('summary', 'lh-passed-audits-summary');
-    passedSummary.textContent = `View ${passedAudits.length} passed items`;
-    passedElem.appendChild(passedSummary);
-
-    for (const audit of passedAudits) {
-      passedElem.appendChild(this._renderAudit(audit));
-    }
+    const passedElements = passedAudits.map(audit => this._renderAudit(audit));
+    const passedElem = this._renderPassedAuditsSection(passedElements);
     element.appendChild(passedElem);
     return element;
   }
@@ -306,7 +313,7 @@ class CategoryRenderer {
     element.appendChild(metricAuditsEl);
 
     const hintAudits = category.audits
-        .filter(audit => audit.group === 'perf-hint')
+        .filter(audit => audit.group === 'perf-hint' && audit.score < 100)
         .sort((auditA, auditB) => auditB.result.rawValue - auditA.result.rawValue);
     let maxWaste = 0;
     hintAudits.forEach(audit => maxWaste = Math.max(maxWaste, audit.result.rawValue));
@@ -317,11 +324,20 @@ class CategoryRenderer {
     hintAuditsEl.open = hintAudits.some(audit => audit.score < 100);
     element.appendChild(hintAuditsEl);
 
-    const infoAudits = category.audits.filter(audit => audit.group === 'perf-info');
+    const infoAudits = category.audits
+        .filter(audit => audit.group === 'perf-info' && audit.score < 100);
     const infoAuditsEl = this._renderAuditGroup(infoAudits, groups['perf-info']);
     infoAuditsEl.open = hintAudits.some(audit => audit.score < 100);
     element.appendChild(infoAuditsEl);
 
+    const passedElements = category.audits
+        .filter(audit => audit.group !== 'perf-metric' && audit.score === 100)
+        .map(audit => this._renderAudit(audit));
+
+    if (!passedElements.length) return element;
+
+    const passedElem = this._renderPassedAuditsSection(passedElements);
+    element.appendChild(passedElem);
     return element;
   }
 
@@ -370,11 +386,7 @@ class CategoryRenderer {
     // don't create a passed section if there are no passed
     if (!passedElements.length) return element;
 
-    const passedElem = this._dom.createElement('details', 'lh-passed-audits');
-    const passedSummary = this._dom.createElement('summary', 'lh-passed-audits-summary');
-    passedElem.appendChild(passedSummary);
-    passedSummary.textContent = `View ${passedElements.length} passed items`;
-    passedElements.forEach(elem => passedElem.appendChild(elem));
+    const passedElem = this._renderPassedAuditsSection(passedElements);
     element.appendChild(passedElem);
     return element;
   }
