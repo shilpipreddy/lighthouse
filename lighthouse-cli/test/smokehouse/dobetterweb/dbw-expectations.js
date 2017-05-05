@@ -230,7 +230,7 @@ module.exports = [
         score: true
       },
       'link-blocking-first-paint': {
-        score: true
+        score: 100
       },
       'no-console-time': {
         score: true
@@ -251,7 +251,7 @@ module.exports = [
         score: true
       },
       'script-blocking-first-paint': {
-        score: true
+        score: 100
       },
       'uses-passive-event-listeners': {
         score: true
