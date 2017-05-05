@@ -123,51 +123,41 @@ class CategoryRenderer {
   _renderPerfHintAudit(audit, scale) {
     const extendedInfo = /** @type {!CategoryRenderer.PerfHintExtendedInfo}
         */ (audit.result.extendedInfo);
-    if (!extendedInfo.value.wastedMs) return this._dom.createElement('span');
 
     const element = this._dom.createElement('details', [
       'lh-perf-hint',
       `lh-perf-hint--${Util.calculateRating(audit.score)}`,
       'lh-expandable-details',
     ].join(' '));
-    const summary = this._dom.createElement('summary', 'lh-perf-hint__summary ' +
+
+    const summary = this._dom.createChildOf(element, 'summary', 'lh-perf-hint__summary ' +
         'lh-expandable-details__summary');
-    element.appendChild(summary);
-
-    const titleEl = this._dom.createElement('div', 'lh-perf-hint__title');
+    const titleEl = this._dom.createChildOf(summary, 'div', 'lh-perf-hint__title');
     titleEl.textContent = audit.result.description;
-    summary.appendChild(titleEl);
 
-    const sparklineContainerEl = this._dom.createElement('div', 'lh-perf-hint__sparkline');
-    const sparklineEl = this._dom.createElement('div', 'lh-sparkline');
-    const sparklineBarEl = this._dom.createElement('div', 'lh-sparkline__bar');
-    sparklineBarEl.style.width = extendedInfo.value.wastedMs / scale * 100 + '%';
-    sparklineEl.appendChild(sparklineBarEl);
-    sparklineContainerEl.appendChild(sparklineEl);
-    summary.appendChild(sparklineContainerEl);
+    const sparklineContainerEl = this._dom.createChildOf(summary, 'div', 'lh-perf-hint__sparkline');
+    const sparklineEl = this._dom.createChildOf(sparklineContainerEl, 'div', 'lh-sparkline');
+    const sparklineBarEl = this._dom.createChildOf(sparklineEl, 'div', 'lh-sparkline__bar');
+    sparklineBarEl.style.width = audit.result.rawValue / scale * 100 + '%';
 
-    const statsEl = this._dom.createElement('div', 'lh-perf-hint__stats');
-    const statsMsEl = this._dom.createElement('div', 'lh-perf-hint__primary-stat');
-    statsMsEl.textContent = extendedInfo.value.wastedMs.toLocaleString() + ' ms';
-    statsEl.appendChild(statsMsEl);
-    summary.appendChild(statsEl);
+    const statsEl = this._dom.createChildOf(summary, 'div', 'lh-perf-hint__stats');
+    const statsMsEl = this._dom.createChildOf(statsEl, 'div', 'lh-perf-hint__primary-stat');
+    statsMsEl.textContent = audit.result.rawValue.toLocaleString() + ' ms';
 
-    const arrowEl = this._dom.createElement('div', 'lh-toggle-arrow', {title: 'See resources'});
-    summary.appendChild(arrowEl);
+    this._dom.createChildOf(summary, 'div', 'lh-toggle-arrow', {title: 'See resources'});
 
     if (extendedInfo.value.wastedKb) {
-      const statsKbEl = this._dom.createElement('div', 'lh-perf-hint__secondary-stat');
+      const statsKbEl = this._dom.createChildOf(statsEl, 'div', 'lh-perf-hint__secondary-stat');
       statsKbEl.textContent = extendedInfo.value.wastedKb.toLocaleString() + ' KB';
-      statsEl.appendChild(statsKbEl);
     }
 
-    const descriptionEl = this._dom.createElement('div', 'lh-perf-hint__description');
-    descriptionEl.textContent = audit.result.helpText;
-    element.appendChild(descriptionEl);
+    const descriptionEl = this._dom.createChildOf(element, 'div', 'lh-perf-hint__description');
+    descriptionEl.appendChild(this._dom.createSpanFromMarkdown(audit.result.helpText));
 
     if (audit.result.details) {
       element.appendChild(this._detailsRenderer.render(audit.result.details));
     }
+
     return element;
   }
 

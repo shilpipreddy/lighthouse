@@ -593,7 +593,7 @@ module.exports = {
       "description": "These metrics encapsulate your app's performance across a number of dimensions."
     },
     "perf-hint": {
-      "title": "Resources",
+      "title": "Opportunities",
       "description": "These are opportunities to speed up your application by optimizing the following resources."
     },
     "perf-info": {
