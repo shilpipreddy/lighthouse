@@ -69,7 +69,7 @@ summary {
 }
 
 .lh-details {
-  font-size: smaller;
+  font-size: var(--body-font-size);
   margin-top: var(--default-padding);
 }
 
